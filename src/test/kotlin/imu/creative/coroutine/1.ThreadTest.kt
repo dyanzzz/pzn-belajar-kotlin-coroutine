@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.concurrent.thread
 
+// 1. membuat thread
 class ThreadTest {
 
     @Test

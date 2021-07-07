@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import java.util.*
 import java.util.concurrent.Executors
 
+// 2. membuat ExecutorService
 // thread object yg lumayah berat (mahal)
 // ukutannya 512kb-1mb
 // jika terlalu banyak menggunakan thread, akan memakan banyak memori
@@ -22,6 +23,7 @@ class ExecutorServiceTest {
         // membuat thread hanya 1
         val executorService = Executors.newSingleThreadExecutor()
         repeat(10){
+            // runnable tidak mengembalikan nilai / void / unit
             val runnable = Runnable {
                 Thread.sleep(1_000)
                 println("Done $it ${Thread.currentThread().name} ${Date()}")
@@ -29,6 +31,7 @@ class ExecutorServiceTest {
 
             // submit runnable ke executorService
             // dan akan mengeksekusi thread 1 1 bergantian untuk seluruh runnable
+            // .execute untuk memasukan antrian runable kedalam executorService
             executorService.execute(runnable)
             println("Selesai memasukan runnable $it")
         }
