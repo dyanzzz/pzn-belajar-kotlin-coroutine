@@ -62,4 +62,25 @@ class JobTest{
             delay(3000)
         }
     }
+
+    // membuat join all function
+    @Test
+    fun testJobJoinAll(){
+        runBlocking {
+            val job1: Job = GlobalScope.launch {
+                delay(2000)
+                println("Coroutine Done ${Thread.currentThread().name}")
+            }
+            val job2: Job = GlobalScope.launch {
+                delay(2000)
+                println("Coroutine Done ${Thread.currentThread().name}")
+            }
+
+            // join all mengimplementasikan join yang di foreach 1 demi 1
+            // dan kotlin memudahkan kita tanpa harus melakukan foreach di kode kita, dan cukup memanggil
+            // joinAll(job, job, job, ....)
+            // untuk menjalankan semua jobnya secara sequensial
+            joinAll(job1, job2)
+        }
+    }
 }
