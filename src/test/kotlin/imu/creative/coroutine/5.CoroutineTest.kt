@@ -1,9 +1,6 @@
 package imu.creative.coroutine
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.concurrent.thread
@@ -59,5 +56,50 @@ class CoroutineTest {
             delay(3_000)
         }
         println("FINISH")
+    }
+
+    // membuat parent child coroutine
+    // saat membuat coroutine child, otomatis kita mewarisi coroutine context yg ada di coroutine parent
+    // dan coroutine parent akan menunggu sampai coroutine child selesai semua
+    @Test
+    fun testParentChild() {
+        runBlocking {
+            val job = GlobalScope.launch {
+                launch {
+                    delay(2000)
+                    println("Child 1 : ${Thread.currentThread().name}")
+                }
+                launch {
+                    delay(4000)
+                    println("Child 2 : ${Thread.currentThread().name}")
+                }
+                delay(1000)
+                println("Parent Done : ${Thread.currentThread().name}")
+            }
+
+            job.join()
+        }
+    }
+
+    @Test
+    fun testParentChildCancel() {
+        runBlocking {
+            val job = GlobalScope.launch {
+                launch {
+                    delay(2000)
+                    println("Child 1 : ${Thread.currentThread().name}")
+                }
+                launch {
+                    delay(4000)
+                    println("Child 2 : ${Thread.currentThread().name}")
+                }
+                delay(1000)
+                println("Parent Done : ${Thread.currentThread().name}")
+            }
+
+            // job.children    // untuk mendapatkan coroutine childnya
+            job.cancelChildren()    // untuk membatalkan semua coroutine childrennya
+            job.join()
+        }
     }
 }
