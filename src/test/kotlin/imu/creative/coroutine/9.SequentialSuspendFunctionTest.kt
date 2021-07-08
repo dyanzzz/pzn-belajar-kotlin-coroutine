@@ -2,6 +2,7 @@ package imu.creative.coroutine
 
 import kotlinx.coroutines.*
 import org.junit.jupiter.api.Test
+import java.util.concurrent.Executors
 import kotlin.system.measureTimeMillis
 
 // suspend function merupakan sequential, dan bukan async
@@ -60,5 +61,27 @@ class SequentialSuspendFunctionTest{
             }
             println("Total time : $time")
         }
+    }
+
+    // membuat yieldFunction
+    @Test
+    fun testYieldFunction() {
+        val dispatcher = Executors.newFixedThreadPool(10).asCoroutineDispatcher()
+        val scope = CoroutineScope(dispatcher)
+
+        runBlocking {
+            scope.launch { runJob(1) }
+            scope.launch { runJob(2) }
+
+            delay(2000)
+        }
+    }
+
+    private suspend fun runJob(number: Int){
+        println("Start job \"$number\" in thread \"${Thread.currentThread().name}\"")
+        // memberikan kesempatan kepada coroutine lain untuk dieksekusi oleh dispatcher yg sedang kita gunakan
+        // jadi bisa eksekusi coroutine secara random => bisa menggunakan yield
+        yield()
+        println("End job \"$number\" in thread \"${Thread.currentThread().name}\"")
     }
 }
