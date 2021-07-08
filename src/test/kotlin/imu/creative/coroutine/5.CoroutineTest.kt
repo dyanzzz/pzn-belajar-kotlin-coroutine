@@ -102,4 +102,25 @@ class CoroutineTest {
             job.join()
         }
     }
+
+    // membuat await cancellation
+    @Test
+    fun testAwaitCancellation() {
+        runBlocking {
+            // didalam runBlocking juga bisa langsung launch, tanpa membuat GlobalScope,
+            // karena, didalam runBlocking, juga ada coroutineScope, menggunakan blocking coroutine scopenya
+            val job = launch {
+                try {
+                    println("Job start")
+                    awaitCancellation() // akan menunggu sampai jobnya di cancel
+                    // jadi ga perlu melooping => while(isActive)
+                } finally {
+                    println("Cancelled")
+                }
+            }
+
+            delay(5000)
+            job.cancelAndJoin()
+        }
+    }
 }
