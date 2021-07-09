@@ -3,6 +3,7 @@ package imu.creative.coroutine
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import org.junit.jupiter.api.Test
+import java.util.*
 
 // menggunakan flow
 // sifatnya lazy, belum dijalankan sebelum kita memanggilnya
@@ -103,6 +104,100 @@ class FlowTest {
             }
 
             job.join()
+        }
+    }
+
+    // shared flow
+    // =====================================================
+    // pada shared flow, kita bisa membuat lebih dari 1 receiver
+    // sharedflow bersifat aktif atau hot. ketika kita mengirim data ke shared flow, data langsung dikirim ke receiver, tanpa perlu di collect dulu oleh receiver
+
+    // shared flow vs broadcast channel
+    // kotlin 1.4 shared flow release
+    // dan menggantikan broadcast channel (tidak dianjurkan untuk digunakan di kotlin 1.4)
+    // shared flow turunan dari flow, sehingga bisa menggunakan semua flow operator
+    // shared flow bukanlah channel, sehingga ga ada operasi close()
+    // untuk membuat receiver dari sharedFlow, kita bisa menggunakan function asSharedFlow()
+    @Test
+    fun testSharedFlow() {
+        val scope = CoroutineScope(Dispatchers.IO)
+        val sharedFlow = MutableSharedFlow<Int>()
+
+        scope.launch {
+            repeat(10) {
+                println("   Send     1 : $it : ${Date()}")
+                // ketika mengirim shared flow
+                // dan jika data belum diterima oleh receivernya, akan di simpan di buffer
+                // lebih fleksibel dibandingkan dengan broadcast channel
+                sharedFlow.emit(it)
+                delay(1000)
+            }
+        }
+
+        // membuat receiver untuk shared flow
+        scope.launch {
+            sharedFlow.asSharedFlow()
+                .buffer(10)
+                .map { "Receive job 1 : $it : ${Date()}" }  // diberikan date, kapan dia menerima datanya
+                .collect {
+                    delay(1000) // diberikan delay, biar tau ada receiver yg lambat
+                    println(it)
+                }
+        }
+
+        scope.launch {
+            sharedFlow.asSharedFlow()
+                .buffer(10)
+                .map { "Receive job 2 : $it : ${Date()}" }  // diberikan date, kapan dia menerima datanya
+                .collect {
+                    // delay 2 detik per 1 data
+                    delay(2000) // diberikan delay, biar tau ada receiver yg lambat
+                    println(it)
+                }
+        }
+
+        runBlocking {
+            delay(22_000)
+            scope.cancel()
+        }
+    }
+
+    // state flow
+    // turunan dari shared flow
+    // cocok untuk menggantikan conflated broadcast channel
+    // pada state flow, receiver hanya akan menerima data paling baru
+    // cocok untuk maintain state, dimana state itu biasanya hanya satu data, tidak peduli berapa kali jumlah perubahan datanya
+    // yg paling penting pada state adalah data terakhirnya
+    // untuk mendapatkan data statenya, kita bis gunakan field value di state flow
+    // membuat receiver menggunakan asStateFlow()
+    // state flow bisa dirancang sebagai pengganti Conflated Broadcast Channel
+    @Test
+    fun testStateFlow() {
+        val scope = CoroutineScope(Dispatchers.IO)
+        val stateFlow = MutableStateFlow(0)
+
+        scope.launch {
+            repeat(10) {
+                println("   Send     1 : $it : ${Date()}")
+                stateFlow.emit(it)
+                delay(1000)
+            }
+        }
+
+        // membuat receiver untuk state flow
+        scope.launch {
+            stateFlow.asStateFlow()
+                .map { "Receive job 2 : $it : ${Date()}" }  // diberikan date, kapan dia menerima datanya
+                .collect {
+                    // delay 2 detik per 1 data
+                    println(it)
+                    delay(5000) // diberikan delay, biar tau ada receiver yg lambat
+                }
+        }
+
+        runBlocking {
+            delay(22_000)
+            scope.cancel()
         }
     }
 }
